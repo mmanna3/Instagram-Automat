@@ -38,7 +38,7 @@ namespace Instagram_Automat
 
 			while (_hayUsuariosALosQueDeboDejarDeSeguir)
 			{
-				_seTildo = false;
+				_seTildo =  false;
 				using (var browser = new ChromeDriver(chromeOptions))
 				{
 					IniciarSesion(browser);
