@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Instagram_Automat.Models;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Interactions;
@@ -19,37 +20,32 @@ namespace Instagram_Automat
 	internal class Program
 	{
 		//todo: EN VEZ DE INICIAR SESIÓN, HACELO CON LOS TOKEN
-		private static string _userName = "amanteaoficial";
+		private static string _nombreDeUsuario = "amanteaoficial";
 		private static string _password = "gordomotoneta1";
-		private static Random _random;
-		private static XMLHelper _xmlHelper;
+		private static ChromeDriver _browser;
+		private static readonly Random Random = new Random();
+
 		private static int _cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo;
 		private static bool _hayUsuariosALosQueDeboDejarDeSeguir = true;
 		private static bool _seTildo = false;
 
 		private static void Main(string[] args)
-		{																
-			var chromeOptions = new ChromeOptions();
-			chromeOptions.EnableMobileEmulation("iPhone 4");
-			//chromeOptions.AddArguments("headless");
-			//chromeOptions.AddArgument("user-data-dir=C:\\Users\\matia\\AppData\\Local\\Google\\Chrome\\User Data"); 
-			_random = new Random();
-			_xmlHelper = new XMLHelper(_userName);			
-
+		{
 			while (_hayUsuariosALosQueDeboDejarDeSeguir)
 			{
 				_seTildo =  false;
-				using (var browser = new ChromeDriver(chromeOptions))
+				
+				using (_browser = InstanciarBrowser())
 				{
-					IniciarSesion(browser);
+					IniciarSesion(_browser);
 
-					RechazarLaPrimeraPantalla(browser);
+					RechazarLaPrimeraPantalla(_browser);
 
-					var usuariosSeguidos = ListaSeguidos(browser);
+					var usuariosSeguidos = ListaSeguidos(_browser);
 					if (_seTildo)
 						break;
 
-					var seguidores = ListaSeguidores(browser);
+					var seguidores = ListaSeguidores(_browser);
 					if (_seTildo)
 						break;
 
@@ -57,7 +53,7 @@ namespace Instagram_Automat
 
 					foreach (var usuario in usuarioQueYoSigoPeroQueNoMeSiguen)
 					{
-						var cantidadSeguidos = DejarDeSeguir(browser, usuario);
+						var cantidadSeguidos = DejarDeSeguir(_browser, usuario);
 						if (_cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo != cantidadSeguidos)
 							_cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo = cantidadSeguidos;
 						else
@@ -71,23 +67,32 @@ namespace Instagram_Automat
 			Console.ReadLine();
 		}
 
+		private static ChromeDriver InstanciarBrowser()
+		{
+			var chromeOptions = new ChromeOptions();
+			chromeOptions.EnableMobileEmulation("iPhone 4");
+			//chromeOptions.AddArguments("headless");
+
+			return new ChromeDriver(chromeOptions);
+		}
+
 		private static int DejarDeSeguir(IWebDriver browser, string usuario)
 		{
-			Thread.Sleep(_random.Next(2000, 2500));
+			Thread.Sleep(Random.Next(2000, 2500));
 			IrAlPerfilDelUsuario(browser, usuario);
 
 			var botonFollowing = browser.FindElement(By.XPath("//button[contains(text(), 'Following')]"), 10);
 			botonFollowing.Click();
-			Thread.Sleep(_random.Next(2000, 2500));
+			Thread.Sleep(Random.Next(2000, 2500));
 
 			var botonUnfollow = browser.FindElement(By.XPath("//button[contains(text(), 'Unfollow')]"), 10);
 			botonUnfollow.Click();
-			Thread.Sleep(_random.Next(2000, 2500));
+			Thread.Sleep(Random.Next(2000, 2500));
 
 			IrAlPerfilDelUsuarioLogueado(browser);
-			Thread.Sleep(_random.Next(2000, 2500));
+			Thread.Sleep(Random.Next(2000, 2500));
 
-			var linkSeguidos = browser.FindElement(By.XPath($"//a[contains(@href, '/{_userName}/following/')]"));
+			var linkSeguidos = browser.FindElement(By.XPath($"//a[contains(@href, '/{_nombreDeUsuario}/following/')]"));
 			var cantidadSeguidos = Convert.ToInt32(linkSeguidos.FindElement(By.CssSelector("span")).Text.Replace(",", ""));				
 
 			Console.WriteLine($"Seguidos: {cantidadSeguidos}");
@@ -111,7 +116,7 @@ namespace Instagram_Automat
 		{
 			IrAlPerfilDelUsuarioLogueado(browser);
 
-			var linkSeguidores = browser.FindElement(By.XPath($"//a[contains(@href, '/{_userName}/followers/')]"));
+			var linkSeguidores = browser.FindElement(By.XPath($"//a[contains(@href, '/{_nombreDeUsuario}/followers/')]"));
 			var cantidadSeguidores = Convert.ToInt32(linkSeguidores.FindElement(By.CssSelector("span")).Text.Replace(",", ""));
 
 			Console.WriteLine($"Seguidores: {cantidadSeguidores}");
@@ -124,8 +129,8 @@ namespace Instagram_Automat
 
 			while (cantidadSeguidores > seguidoresAnchorElements.Count && !_seTildo)
 			{
-				Thread.Sleep(_random.Next(1000, 2000));
-				browser.ExecuteScript($"window.scrollBy(0,{_random.Next(2000, 3000)})");
+				Thread.Sleep(Random.Next(1000, 2000));
+				browser.ExecuteScript($"window.scrollBy(0,{Random.Next(2000, 3000)})");
 				seguidoresAnchorElements = browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
 
 				if (cantidadDeSeguidosElementsIteracionAnterior == seguidoresAnchorElements.Count)
@@ -139,7 +144,7 @@ namespace Instagram_Automat
 		{
 			IrAlPerfilDelUsuarioLogueado(browser);
 
-			var linkSeguidos = browser.FindElement(By.XPath($"//a[contains(@href, '/{_userName}/following/')]"));
+			var linkSeguidos = browser.FindElement(By.XPath($"//a[contains(@href, '/{_nombreDeUsuario}/following/')]"));
 			var cantidadSeguidos = Convert.ToInt32(linkSeguidos.FindElement(By.CssSelector("span")).Text.Replace(",", ""));
 
 			Console.WriteLine($"Seguidos: {cantidadSeguidos}");
@@ -151,8 +156,8 @@ namespace Instagram_Automat
 
 			while (cantidadSeguidos > seguidosAnchorElement.Count && !_seTildo)
 			{
-				Thread.Sleep(_random.Next(1000, 2000));
-				browser.ExecuteScript($"window.scrollBy(0,{_random.Next(2000, 3000)})");
+				Thread.Sleep(Random.Next(1000, 2000));
+				browser.ExecuteScript($"window.scrollBy(0,{Random.Next(2000, 3000)})");
 				seguidosAnchorElement = browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
 
 				if (cantidadDeSeguidosElementsIteracionAnterior == seguidosAnchorElement.Count)
@@ -164,7 +169,7 @@ namespace Instagram_Automat
 
 		private static void IrAlPerfilDelUsuarioLogueado(IWebDriver browser)
 		{
-			browser.Url = $"http://www.instagram.com/{_userName}";
+			browser.Url = $"http://www.instagram.com/{_nombreDeUsuario}";
 		}
 
 		private static void IrAlPerfilDelUsuario(IWebDriver browser, string userName)
@@ -190,7 +195,7 @@ namespace Instagram_Automat
 			browser.Url = "https://www.instagram.com/accounts/login/";
 			
 			var userNameInput = browser.FindElement(By.CssSelector("input[aria-label='Phone number, username, or email']"));
-			userNameInput.SendKeys(_userName);
+			userNameInput.SendKeys(_nombreDeUsuario);
 
 			var passwordInput = browser.FindElement(By.CssSelector("input[aria-label=\"Password\"]"));
 			passwordInput.SendKeys(_password);
