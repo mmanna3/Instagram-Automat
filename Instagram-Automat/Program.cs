@@ -1,17 +1,7 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Xml;
 using Instagram_Automat.Models;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Interactions;
-using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 
@@ -20,197 +10,180 @@ namespace Instagram_Automat
 	internal class Program
 	{
 		//todo: EN VEZ DE INICIAR SESIÓN, HACELO CON LOS TOKEN
-		private static string _nombreDeUsuario = "amanteaoficial";
-		private static string _password = "gordomotoneta1";
-		private static ChromeDriver _browser;
-		private static readonly Random Random = new Random();
-
-		private static int _cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo;
-		private static bool _hayUsuariosALosQueDeboDejarDeSeguir = true;
-		private static bool _seTildo = false;
+		private static Usuario _usuario;				
+		private static SeleniumAutomat _seleniumAutomat;
+		private static readonly DataAccesLayer Dal = new DataAccesLayer();
 
 		private static void Main(string[] args)
 		{
-			while (_hayUsuariosALosQueDeboDejarDeSeguir)
+			ObtenerUsuarioPrincipal();						
+
+			var opcionElegida = MostrarMenu();
+
+			while (opcionElegida != 0)
 			{
-				_seTildo =  false;
-				
-				using (_browser = InstanciarBrowser())
+				switch (opcionElegida)
 				{
-					IniciarSesion(_browser);
-
-					RechazarLaPrimeraPantalla(_browser);
-
-					var usuariosSeguidos = ListaSeguidos(_browser);
-					if (_seTildo)
-						break;
-
-					var seguidores = ListaSeguidores(_browser);
-					if (_seTildo)
-						break;
-
-					var usuarioQueYoSigoPeroQueNoMeSiguen = UsuarioQueYoSigoPeroQueNoMeSiguen(usuariosSeguidos, seguidores);
-
-					foreach (var usuario in usuarioQueYoSigoPeroQueNoMeSiguen)
+					case MenuOpciones.OpcionActualizarCantidadDeSeguidores:
 					{
-						var cantidadSeguidos = DejarDeSeguir(_browser, usuario);
-						if (_cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo != cantidadSeguidos)
-							_cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo = cantidadSeguidos;
-						else
-							break;
+						ActualizarCantidadDeSeguidores();
+						MostrarOperacionRealizadaConExito();
+						opcionElegida = MostrarMenu();
+						break;
 					}
-
-					if (!usuarioQueYoSigoPeroQueNoMeSiguen.Any())
-						_hayUsuariosALosQueDeboDejarDeSeguir = false;
-				}				
+					case MenuOpciones.OpcionActualizarCantidadDeSeguidos:
+					{
+						ActualizarCantidadDeSeguidos();
+						MostrarOperacionRealizadaConExito();
+						opcionElegida = MostrarMenu();
+						break;
+					}
+					case MenuOpciones.OpcionChequearSiDiferenciaEntreBaseYRealidad:
+					{
+						MostrarChequeoDeSeguidoresYSeguidosCensados();
+						MostrarOperacionRealizadaConExito();
+						opcionElegida = MostrarMenu();
+						break;
+					}
+					case MenuOpciones.DejarDeSeguirUsuariosQueNoMeSiguen:
+					{
+						DejarDeSeguirUsuariosQueNoMeSiguen();
+						MostrarOperacionRealizadaConExito();
+						opcionElegida = MostrarMenu();
+						break;
+					}
+				}
 			}
+			
+
+
+			//while (_hayUsuariosALosQueDeboDejarDeSeguir)
+			//{
+			//	_seTildo =  false;
+
+			//	using (_browser = InstanciarBrowser())
+			//	{
+			//		IniciarSesion(_browser);
+
+			//		RechazarLaPrimeraPantalla(_browser);
+
+			//		var usuariosSeguidos = ListaSeguidos(_browser);
+			//		if (_seTildo)
+			//			break;
+
+			//		var seguidores = ListaSeguidores(_browser);
+			//		if (_seTildo)
+			//			break;
+
+			//		var usuarioQueYoSigoPeroQueNoMeSiguen = UsuarioQueYoSigoPeroQueNoMeSiguen(usuariosSeguidos, seguidores);
+
+			//		foreach (var usuario in usuarioQueYoSigoPeroQueNoMeSiguen)
+			//		{
+			//			var cantidadSeguidos = DejarDeSeguir(_browser, usuario);
+			//			if (_cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo != cantidadSeguidos)
+			//				_cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo = cantidadSeguidos;
+			//			else
+			//				break;
+			//		}
+
+			//		if (!usuarioQueYoSigoPeroQueNoMeSiguen.Any())
+			//			_hayUsuariosALosQueDeboDejarDeSeguir = false;
+			//	}				
+			//}
+			//Console.ReadLine();
+		}
+
+		private static void DejarDeSeguirUsuariosQueNoMeSiguen()
+		{
+			var usuariosQueYoSigoPeroNoMeSiguen = Dal.UsuariosQueYoSigoPeroNoMeSiguen(_usuario);
+			_seleniumAutomat.DejarDeSeguirUsuarios(usuariosQueYoSigoPeroNoMeSiguen);
+		}
+
+		private static void MostrarOperacionRealizadaConExito()
+		{
+			Console.WriteLine("Operación realizada con éxito");
 			Console.ReadLine();
 		}
 
-		private static ChromeDriver InstanciarBrowser()
+		private static void ActualizarCantidadDeSeguidos()
 		{
-			var chromeOptions = new ChromeOptions();
-			chromeOptions.EnableMobileEmulation("iPhone 4");
-			//chromeOptions.AddArguments("headless");
+			var seguidos = _seleniumAutomat.Seguidos();
 
-			return new ChromeDriver(chromeOptions);
+			Console.WriteLine($"Guardando nick de cada seguido en la base...");
+
+			Dal.EliminarTodosLosSeguidos(_usuario);
+
+			Dal.CargarSeguidos(_usuario, seguidos);
 		}
 
-		private static int DejarDeSeguir(IWebDriver browser, string usuario)
+		private static void MostrarChequeoDeSeguidoresYSeguidosCensados()
 		{
-			Thread.Sleep(Random.Next(2000, 2500));
-			IrAlPerfilDelUsuario(browser, usuario);
+			Console.WriteLine(_usuario.CantidadSeguidos() == _seleniumAutomat.CantidadRealDeSeguidos()
+				? "\nNo es necesario actualizar la cantidad de seguidos."
+				: "\nSe recomienda actualizar la cantidad de seguidos.");
 
-			var botonFollowing = browser.FindElement(By.XPath("//button[contains(text(), 'Following')]"), 10);
-			botonFollowing.Click();
-			Thread.Sleep(Random.Next(2000, 2500));
-
-			var botonUnfollow = browser.FindElement(By.XPath("//button[contains(text(), 'Unfollow')]"), 10);
-			botonUnfollow.Click();
-			Thread.Sleep(Random.Next(2000, 2500));
-
-			IrAlPerfilDelUsuarioLogueado(browser);
-			Thread.Sleep(Random.Next(2000, 2500));
-
-			var linkSeguidos = browser.FindElement(By.XPath($"//a[contains(@href, '/{_nombreDeUsuario}/following/')]"));
-			var cantidadSeguidos = Convert.ToInt32(linkSeguidos.FindElement(By.CssSelector("span")).Text.Replace(",", ""));				
-
-			Console.WriteLine($"Seguidos: {cantidadSeguidos}");
-
-			return cantidadSeguidos;
+			Console.WriteLine(_usuario.CantidadSeguidores() == _seleniumAutomat.CantidadRealDeSeguidores()
+				? "No es necesario actualizar la cantidad de seguidores.\n"
+				: "Se recomienda actualizar la cantidad de seguidores.\n");
 		}
 
-		private static IList<string> UsuarioQueYoSigoPeroQueNoMeSiguen(IList<string> usuariosSeguidos, IList<string> seguidores)
+		private static void ActualizarCantidadDeSeguidores()
 		{
-			var result = new List<string>();			
+			var seguidores = _seleniumAutomat.Seguidores();			
 
-			foreach (var usuarioSeguido in usuariosSeguidos)
-				if (!seguidores.Contains(usuarioSeguido))
-					result.Add(usuarioSeguido);
+			Console.WriteLine($"Guardando nick de cada seguidor en la base...");
 
-			Console.WriteLine($"Usuarios que yo sigo pero que no me siguen: {result.Count}");
-			return result;
+			Dal.EliminarTodosLosSeguidores(_usuario);
+
+			Dal.CargarSeguidores(_usuario, seguidores);
 		}
 
-		private static IList<string> ListaSeguidores(RemoteWebDriver browser)
+		private static MenuOpciones MostrarMenu()
 		{
-			IrAlPerfilDelUsuarioLogueado(browser);
+			Console.Clear();
+			MostrarDatosDelUsuarioPrincipal();
 
-			var linkSeguidores = browser.FindElement(By.XPath($"//a[contains(@href, '/{_nombreDeUsuario}/followers/')]"));
-			var cantidadSeguidores = Convert.ToInt32(linkSeguidores.FindElement(By.CssSelector("span")).Text.Replace(",", ""));
+			foreach (var opcion in Enum.GetValues(typeof(MenuOpciones)).Cast<MenuOpciones>())
+				Console.WriteLine($@"{(int) opcion} - {opcion.Descripcion()}");
 
-			Console.WriteLine($"Seguidores: {cantidadSeguidores}");
-
-			linkSeguidores.Click();
-
-			var seguidoresAnchorElements = browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
-
-			var cantidadDeSeguidosElementsIteracionAnterior = cantidadSeguidores;
-
-			while (cantidadSeguidores > seguidoresAnchorElements.Count && !_seTildo)
+			int opcionElegida;
+			do
 			{
-				Thread.Sleep(Random.Next(1000, 2000));
-				browser.ExecuteScript($"window.scrollBy(0,{Random.Next(2000, 3000)})");
-				seguidoresAnchorElements = browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
+				Console.WriteLine("\nSeleccionar una opción:");
+				opcionElegida = Convert.ToInt32(Console.ReadLine());
+			}
+			while (!Enum.IsDefined(typeof(MenuOpciones), opcionElegida));
 
-				if (cantidadDeSeguidosElementsIteracionAnterior == seguidoresAnchorElements.Count)
-					_seTildo = true;
+			return (MenuOpciones) Enum.Parse(typeof(MenuOpciones), opcionElegida.ToString());
+		}
+
+
+		private static void MostrarDatosDelUsuarioPrincipal()
+		{
+			Console.WriteLine($"Usuario logueado: {_usuario.NombreDeUsuario}.");
+			Console.WriteLine($"Seguidores último censo: {_usuario.CantidadSeguidores()}.");
+			Console.WriteLine($"Seguidos último censo: {_usuario.CantidadSeguidos()}.\n");			
+		}
+
+		private static void ObtenerUsuarioPrincipal()
+		{
+			Console.WriteLine(@"Ingresar nombre de usuario:");
+			var nombreUsuario = Console.ReadLine();
+
+			var usuario = Dal.UsuarioOrDefault(nombreUsuario);
+
+			if (usuario == null)
+			{
+				Console.WriteLine(@"Ingresar contraseña:");
+				var contrasenia = Console.ReadLine();
+
+				usuario = Dal.CrearUsuario(nombreUsuario, contrasenia);
 			}
 
-			return seguidoresAnchorElements.Select(x => x.Text).ToList();
-		}
+			_usuario = usuario;
+			_seleniumAutomat = new SeleniumAutomat(_usuario);
 
-		private static IList<string> ListaSeguidos(RemoteWebDriver browser)
-		{
-			IrAlPerfilDelUsuarioLogueado(browser);
-
-			var linkSeguidos = browser.FindElement(By.XPath($"//a[contains(@href, '/{_nombreDeUsuario}/following/')]"));
-			var cantidadSeguidos = Convert.ToInt32(linkSeguidos.FindElement(By.CssSelector("span")).Text.Replace(",", ""));
-
-			Console.WriteLine($"Seguidos: {cantidadSeguidos}");
-
-			linkSeguidos.Click();
-
-			var seguidosAnchorElement = browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
-			var cantidadDeSeguidosElementsIteracionAnterior = cantidadSeguidos;
-
-			while (cantidadSeguidos > seguidosAnchorElement.Count && !_seTildo)
-			{
-				Thread.Sleep(Random.Next(1000, 2000));
-				browser.ExecuteScript($"window.scrollBy(0,{Random.Next(2000, 3000)})");
-				seguidosAnchorElement = browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
-
-				if (cantidadDeSeguidosElementsIteracionAnterior == seguidosAnchorElement.Count)
-					_seTildo = true;
-			}
-
-			return seguidosAnchorElement.Select(x => x.Text).ToList();
-		}
-
-		private static void IrAlPerfilDelUsuarioLogueado(IWebDriver browser)
-		{
-			browser.Url = $"http://www.instagram.com/{_nombreDeUsuario}";
-		}
-
-		private static void IrAlPerfilDelUsuario(IWebDriver browser, string userName)
-		{
-			browser.Url = $"http://www.instagram.com/{userName}";
-		}
-
-		private static void RechazarLaPrimeraPantalla(ChromeDriver browser)
-		{
-			try
-			{
-				var botonRechazarNotificaciones = browser.FindElement(By.XPath("//button[contains(text(), 'Not Now')]"), 10);
-				botonRechazarNotificaciones.Click();
-			}
-			catch (Exception e)
-			{
-				Console.Write(e.Message);
-			}
-		}
-
-		private static void IniciarSesion(IWebDriver browser)
-		{
-			browser.Url = "https://www.instagram.com/accounts/login/";
-			
-			var userNameInput = browser.FindElement(By.CssSelector("input[aria-label='Phone number, username, or email']"));
-			userNameInput.SendKeys(_nombreDeUsuario);
-
-			var passwordInput = browser.FindElement(By.CssSelector("input[aria-label=\"Password\"]"));
-			passwordInput.SendKeys(_password);
-
-			var botonIngresar = browser.FindElement(By.CssSelector("button[type=\"submit\"]"));
-			botonIngresar.Click();
-		}
-	}
-
-	public static class WebDriverExtensions
-	{
-		public static IWebElement FindElement(this IWebDriver driver, By by, int timeoutInSeconds)
-		{
-			var wait = new WebDriverWait(driver, TimeSpan.FromSeconds(timeoutInSeconds));
-			return wait.Until(ExpectedConditions.ElementExists(by));		
+			Console.Clear();
 		}
 	}
 

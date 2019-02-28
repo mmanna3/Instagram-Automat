@@ -11,7 +11,8 @@ namespace Instagram_Automat.Models
 	public class MyDbContext : DbContext
 	{
 		public DbSet<Usuario> Usuarios { get; set; }
-		public DbSet<Seguido> UsuariosSecundarios { get; set; }
+		public DbSet<Seguido> Seguidos { get; set; }
+		public DbSet<Seguidor> Seguidores { get; set; }
 
 		protected override void OnModelCreating(DbModelBuilder modelBuilder)
 		{

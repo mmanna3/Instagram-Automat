@@ -14,10 +14,17 @@ namespace Instagram_Automat.Models
 		public string NombreDeUsuario { get; set; }
 		public string Contrasenia { get; set; }
 
-		public int CantidadSeguidos { get; set; }
-		public int CantidadSeguidores { get; set; }
-
 		public virtual ICollection<Seguido> Seguidos { get; set; }
 		public virtual ICollection<Seguidor> Seguidores { get; set; }
+
+		public int CantidadSeguidos()
+		{
+			return Seguidos.Count;
+		}
+
+		public int CantidadSeguidores()
+		{
+			return Seguidores.Count;
+		}
 	}
 }
