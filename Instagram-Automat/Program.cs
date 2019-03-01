@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using Instagram_Automat.Models;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
@@ -54,49 +55,20 @@ namespace Instagram_Automat
 					}
 				}
 			}
-			
-
-
-			//while (_hayUsuariosALosQueDeboDejarDeSeguir)
-			//{
-			//	_seTildo =  false;
-
-			//	using (_browser = InstanciarBrowser())
-			//	{
-			//		IniciarSesion(_browser);
-
-			//		RechazarLaPrimeraPantalla(_browser);
-
-			//		var usuariosSeguidos = ListaSeguidos(_browser);
-			//		if (_seTildo)
-			//			break;
-
-			//		var seguidores = ListaSeguidores(_browser);
-			//		if (_seTildo)
-			//			break;
-
-			//		var usuarioQueYoSigoPeroQueNoMeSiguen = UsuarioQueYoSigoPeroQueNoMeSiguen(usuariosSeguidos, seguidores);
-
-			//		foreach (var usuario in usuarioQueYoSigoPeroQueNoMeSiguen)
-			//		{
-			//			var cantidadSeguidos = DejarDeSeguir(_browser, usuario);
-			//			if (_cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo != cantidadSeguidos)
-			//				_cantidadSeguidosAntesDeIntentarDejarDeSeguirAlUltimo = cantidadSeguidos;
-			//			else
-			//				break;
-			//		}
-
-			//		if (!usuarioQueYoSigoPeroQueNoMeSiguen.Any())
-			//			_hayUsuariosALosQueDeboDejarDeSeguir = false;
-			//	}				
-			//}
-			//Console.ReadLine();
 		}
 
 		private static void DejarDeSeguirUsuariosQueNoMeSiguen()
 		{
 			var usuariosQueYoSigoPeroNoMeSiguen = Dal.UsuariosQueYoSigoPeroNoMeSiguen(_usuario);
-			_seleniumAutomat.DejarDeSeguirUsuarios(usuariosQueYoSigoPeroNoMeSiguen);
+			try
+			{
+				_seleniumAutomat.DejarDeSeguirUsuarios(usuariosQueYoSigoPeroNoMeSiguen);
+			}
+			catch
+			{
+				Thread.Sleep(new Random().Next(60000, 80000));
+				DejarDeSeguirUsuariosQueNoMeSiguen();
+			}
 		}
 
 		private static void MostrarOperacionRealizadaConExito()
@@ -181,7 +153,7 @@ namespace Instagram_Automat
 			}
 
 			_usuario = usuario;
-			_seleniumAutomat = new SeleniumAutomat(_usuario);
+			_seleniumAutomat = new SeleniumAutomat(_usuario, Dal);
 
 			Console.Clear();
 		}

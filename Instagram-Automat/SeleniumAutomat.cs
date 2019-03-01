@@ -16,10 +16,11 @@ namespace Instagram_Automat
 {
 	public class SeleniumAutomat
 	{
-		private readonly ChromeDriver _browser;
+		private ChromeDriver _browser;
 		private readonly Usuario _usuario;
 		private static readonly Random Random = new Random();
-		private DataAccesLayer _dal;
+		private readonly DataAccesLayer _dal;
+		private bool _yaEspereUnaVez = false;
 
 		public SeleniumAutomat(Usuario usuario, DataAccesLayer dal)
 		{
@@ -58,7 +59,7 @@ namespace Instagram_Automat
 
 			try
 			{
-				Console.WriteLine($"Obteniendo el nick de cada seguidor...");
+				Console.WriteLine("Obteniendo el nick de cada seguidor...");
 				return NicksDeUsuariosRelacionados(cantidadSeguidores);
 			}
 			catch
@@ -109,7 +110,7 @@ namespace Instagram_Automat
 			var cantidadIteracionAnterior = 0;
 			while (cantidadQueSeDebeConseguir > relacionadosLinkElements.Count)
 			{
-				Thread.Sleep(Random.Next(1000, 2000));
+				Thread.Sleep(Random.Next(3000, 4000));
 				_browser.ExecuteScript($"window.scrollBy(0,{Random.Next(2000, 3000)})");
 				relacionadosLinkElements = _browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
 
@@ -137,24 +138,25 @@ namespace Instagram_Automat
 
 			EsperarEntre(1000, 2000);
 
-			while (!MetodosGenerales.PantallaActivaEsPerfilDelUsuario(_browser))
+			while (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser))
 			{
 				MetodosGenerales.RechazarOfrecimientos(_browser);
 				IrAlPerfilDelUsuarioLogueado();
-			}				
+			}
+			EsperarEntre(2000, 3000);
+			IrAlPerfilDelUsuarioLogueado();
 		}
 
 		public void DejarDeSeguirUsuarios(IList<string> nicksUsuariosADejarDeSeguir)
 		{
 			foreach (var nick in nicksUsuariosADejarDeSeguir)
-			{
-				DejarDeSeguirUsuario(nick);				
-			}
+				DejarDeSeguirUsuario(nick);
 		}
 
 		private void IrAlPerfilDelUsuarioLogueado()
 		{
-			MetodosGenerales.IrAlPerfilDelUsuario(_browser, _usuario.NombreDeUsuario);
+			if (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser))
+				_browser.Url = $"http://www.instagram.com/{_usuario.NombreDeUsuario}";
 		}
 
 		private void DejarDeSeguirUsuario(string nick)
@@ -163,14 +165,16 @@ namespace Instagram_Automat
 
 			var botonFollowing = _browser.FindElement(By.XPath("//button[contains(text(), 'Following')]"), 10);
 			botonFollowing.Click();
-			Thread.Sleep(Random.Next(2000, 2500));
+			Thread.Sleep(Random.Next(3500, 5000));
 
 			var botonUnfollowDelPopup = _browser.FindElement(By.XPath("//button[contains(text(), 'Unfollow')]"), 10);
 			botonUnfollowDelPopup.Click();
-			Thread.Sleep(Random.Next(2000, 2500));		
+			Thread.Sleep(Random.Next(3500, 5000));
 
 			if (CantidadRealDeSeguidos() == _usuario.CantidadSeguidos())
-				throw new Exception("Se colgó");
+			{
+				throw new Exception("Se colgó");				
+			}				
 			
 			_dal.EliminarSeguido(_usuario, nick);
 		}
@@ -178,6 +182,13 @@ namespace Instagram_Automat
 		private static void EsperarEntre(int inicio, int fin)
 		{
 			Thread.Sleep(Random.Next(inicio, fin));
+		}
+
+		public void ReiniciarBrowserEIiniciarSesion()
+		{
+			_browser.Dispose();
+			_browser = MetodosGenerales.Browser();
+			IniciarSesion();
 		}
 	}
 }

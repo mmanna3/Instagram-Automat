@@ -10,11 +10,10 @@ namespace Instagram_Automat
 	{
 		public static void IrAlPerfilDelUsuario(IWebDriver browser, string nombreDeUsuario)
 		{
-			if (!PantallaActivaEsPerfilDelUsuario(browser))
-				browser.Url = $"http://www.instagram.com/{nombreDeUsuario}";
+			browser.Url = $"http://www.instagram.com/{nombreDeUsuario}";
 		}
 
-		public static bool PantallaActivaEsPerfilDelUsuario(IWebDriver browser)
+		public static bool PantallaActivaEsPerfilDelUsuarioLogueado(IWebDriver browser)
 		{
 			return browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Edit Profile')]"));
 		}
@@ -27,7 +26,7 @@ namespace Instagram_Automat
 				botonRechazar.Click();
 				Thread.Sleep(4000);
 			}
-			if (browser.IsElementDisplayed(By.XPath("//[contains(text(), 'Go to the')]")))
+			if (browser.IsElementDisplayed(By.XPath("//[contains(text(), 'Go to the App')]")))
 			{
 				var botonRechazar = browser.FindElement(By.XPath("//button[contains(text(), 'Go to the')]"));
 				botonRechazar.Click();
