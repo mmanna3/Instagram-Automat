@@ -15,10 +15,11 @@ namespace Instagram_Automat
 		private static Usuario _usuario;				
 		private static SeleniumAutomat _seleniumAutomat;
 		private static readonly DataAccesLayer Dal = new DataAccesLayer();
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		private static void Main(string[] args)
+        private static void Main(string[] args)
 		{
-			ObtenerUsuarioPrincipal();						
+            ObtenerUsuarioPrincipal();						
 
 			var opcionElegida = MostrarMenu();
 
