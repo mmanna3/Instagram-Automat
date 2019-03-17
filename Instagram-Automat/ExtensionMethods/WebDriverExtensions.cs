@@ -1,4 +1,5 @@
 ﻿using System;
+using Instagram_Automat.Utils;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
@@ -25,5 +26,22 @@ namespace Instagram_Automat.ExtensionMethods
 				return false;
 			}
 		}
-	}
+
+        public static void ClickAndScrollIfException(this IWebElement element, YKNChromeDriver driver)      
+        {
+            //Execute(unaFuncion)
+            //    .IfException(otraFuncion)
+            //    .TiempoDeEsperaEntreIntentosEnSegundos(60)
+            //    .CantidadDeVecesAntesDeAbortar(3);
+
+            //try
+            //{
+            //    element.Click();                    //mati te ♥
+            //}
+            //catch (Exception)
+            //{
+            //    driver.Scroll(2000, 3000);
+            //}
+        }
+    }
 }

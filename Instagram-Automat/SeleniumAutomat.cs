@@ -1,22 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Instagram_Automat.ExtensionMethods;
 using Instagram_Automat.Models;
+using Instagram_Automat.Utils;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Remote;
 
 namespace Instagram_Automat
 {
-	public class SeleniumAutomat
+    public class SeleniumAutomat
 	{
-		private ChromeDriver _browser;
+		private YKNChromeDriver _browser;
 		private readonly Usuario _usuario;
 		private static readonly Random Random = new Random();
 		private readonly DataAccesLayer _dal;
@@ -110,7 +105,7 @@ namespace Instagram_Automat
 			while (cantidadQueSeDebeConseguir > relacionadosLinkElements.Count)
 			{
 				Thread.Sleep(Random.Next(3000, 4000));
-				_browser.ExecuteScript($"window.scrollBy(0,{Random.Next(2000, 3000)})");                
+                _browser.Scroll(2000, 3000);
 				relacionadosLinkElements = _browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
 
 				if (cantidadIteracionAnterior == relacionadosLinkElements.Count)
@@ -133,7 +128,7 @@ namespace Instagram_Automat
 			passwordInput.SendKeys(_usuario.Contrasenia);
 
 			var botonIngresar = _browser.FindElement(By.CssSelector("button[type=\"submit\"]"));
-            botonIngresar.ClickAndIfExceptionScroll();
+            new ExecuterBuilder(botonIngresar.Click());
 
 			EsperarEntre(1000, 2000);
 

@@ -1,6 +1,7 @@
 ﻿using System.Threading;
 using Instagram_Automat.ExtensionMethods;
 using Instagram_Automat.Models;
+using Instagram_Automat.Utils;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
@@ -42,13 +43,13 @@ namespace Instagram_Automat
 			}			
 		}
 
-		public static ChromeDriver Browser()
+		public static YKNChromeDriver Browser()
 		{
 			var chromeOptions = new ChromeOptions();
 			chromeOptions.EnableMobileEmulation("iPhone 4");
 			//chromeOptions.AddArguments("headless");
 
-			return new ChromeDriver(chromeOptions);
+			return new YKNChromeDriver(chromeOptions);
 		}
 	}
 }
