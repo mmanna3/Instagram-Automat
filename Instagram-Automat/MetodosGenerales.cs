@@ -21,9 +21,9 @@ namespace Instagram_Automat
 
         public static void RechazarOfrecimientos(IWebDriver browser)
 		{
-            if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Close')]")))
+            if (browser.IsElementDisplayed(By.XPath("//[contains(text(), 'Close')]")))
             {
-                browser.FindElement(By.XPath("//button[contains(text(), 'Close')]")).Click();;                
+                browser.FindElement(By.XPath("//[contains(text(), 'Close')]")).Click();;                
                 Thread.Sleep(4000);
             }
             if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Not Now')]")))
@@ -33,7 +33,7 @@ namespace Instagram_Automat
 			}
 			if (browser.IsElementDisplayed(By.XPath("//[contains(text(), 'Go to the App')]")))
 			{
-				browser.FindElement(By.XPath("//button[contains(text(), 'Go to the')]")).Click();
+				browser.FindElement(By.XPath("//[contains(text(), 'Go to the')]")).Click();
 				Thread.Sleep(4000);
 			}
 			if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Cancel')]")))

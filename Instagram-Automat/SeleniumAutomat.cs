@@ -128,7 +128,8 @@ namespace Instagram_Automat
 			passwordInput.SendKeys(_usuario.Contrasenia);
 
 			var botonIngresar = _browser.FindElement(By.CssSelector("button[type=\"submit\"]"));
-            new ExecuterBuilder(botonIngresar.Click());
+
+            new ExecuterBuilder(botonIngresar.Click, null).Execute();
 
 			EsperarEntre(1000, 2000);
 
