@@ -43,7 +43,17 @@ namespace Instagram_Automat
 			}			
 		}
 
-		public static YKNChromeDriver Browser()
+        public static IWebElement LinkSeguidores(YKNChromeDriver browser, string nombreDeUsuario)
+        {
+            return browser.FindElement(By.XPath($"//a[contains(@href, '/{nombreDeUsuario}/followers/')]"));
+        }
+
+        public static IWebElement LinkSeguidos(YKNChromeDriver browser, string nombreDeUsuario)
+        {
+            return browser.FindElement(By.XPath($"//a[contains(@href, '/{nombreDeUsuario}/following/')]"));
+        }
+
+        public static YKNChromeDriver Browser()
 		{
 			var chromeOptions = new ChromeOptions();
 			chromeOptions.EnableMobileEmulation("iPhone 4");

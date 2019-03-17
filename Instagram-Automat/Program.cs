@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using Instagram_Automat.Models;
+using Instagram_Automat.Utils;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
@@ -48,8 +49,12 @@ namespace Instagram_Automat
 					}
 					case MenuOpciones.DejarDeSeguirUsuariosQueNoMeSiguen:
 					{
-						DejarDeSeguirUsuariosQueNoMeSiguen();
-						MostrarOperacionRealizadaConExito();
+                        new ExecuterBuilder(DejarDeSeguirUsuariosQueNoMeSiguen)
+                                .AttemptsNumberBeforeCancel(10)
+                                .WaitTimeBetweenAttempts(100, 150)
+                                .Execute();                            
+
+                        MostrarOperacionRealizadaConExito();
 						opcionElegida = MostrarMenu();
 						break;
 					}
@@ -60,15 +65,7 @@ namespace Instagram_Automat
 		private static void DejarDeSeguirUsuariosQueNoMeSiguen()
 		{
 			var usuariosQueYoSigoPeroNoMeSiguen = Dal.UsuariosQueYoSigoPeroNoMeSiguen(_usuario);
-			try
-			{
-				_seleniumAutomat.DejarDeSeguirUsuarios(usuariosQueYoSigoPeroNoMeSiguen);
-			}
-			catch
-			{
-				Thread.Sleep(new Random().Next(60000, 80000));
-				DejarDeSeguirUsuariosQueNoMeSiguen();
-			}
+            _seleniumAutomat.DejarDeSeguirUsuarios(usuariosQueYoSigoPeroNoMeSiguen);            
 		}
 
 		private static void MostrarOperacionRealizadaConExito()
@@ -90,11 +87,11 @@ namespace Instagram_Automat
 
 		private static void MostrarChequeoDeSeguidoresYSeguidosCensados()
 		{
-			Console.WriteLine(_usuario.CantidadSeguidos() == _seleniumAutomat.CantidadRealDeSeguidos()
+			Console.WriteLine(_usuario.CantidadSeguidos() == _seleniumAutomat.CantidadDeSeguidosQueFiguraEnElPerfil()
 				? "\nNo es necesario actualizar la cantidad de seguidos."
 				: "\nSe recomienda actualizar la cantidad de seguidos.");
 
-			Console.WriteLine(_usuario.CantidadSeguidores() == _seleniumAutomat.CantidadRealDeSeguidores()
+			Console.WriteLine(_usuario.CantidadSeguidores() == _seleniumAutomat.CantidadDeSeguidoresQueFiguraEnElPerfil()
 				? "No es necesario actualizar la cantidad de seguidores.\n"
 				: "Se recomienda actualizar la cantidad de seguidores.\n");
 		}
@@ -158,7 +155,4 @@ namespace Instagram_Automat
 			Console.Clear();
 		}
 	}
-
-	//var builder = new Actions(browser);
-	//builder.KeyDown(Keys.PageDown).Perform();
 }

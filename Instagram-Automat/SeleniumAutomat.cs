@@ -25,29 +25,27 @@ namespace Instagram_Automat
 			IniciarSesion();
 		}
 
-		public int CantidadRealDeSeguidores()
+		public int CantidadDeSeguidoresQueFiguraEnElPerfil()
 		{
 			IrAlPerfilDelUsuarioLogueado();
-
-			var linkSeguidores = LinkSeguidores();
-			return TextoDelSpanQueTieneElLink(linkSeguidores);
+			var linkSeguidores = MetodosGenerales.LinkSeguidos(_browser, _usuario.NombreDeUsuario);
+            return TextoDelSpanQueTieneElLink(linkSeguidores);
 		}
 
 
-		public int CantidadRealDeSeguidos()
+		public int CantidadDeSeguidosQueFiguraEnElPerfil()
 		{
 			IrAlPerfilDelUsuarioLogueado();
-
-			var linkSeguidos = LinkSeguidos();
-			return TextoDelSpanQueTieneElLink(linkSeguidos);
+			var linkSeguidos = MetodosGenerales.LinkSeguidos(_browser, _usuario.NombreDeUsuario);
+            return TextoDelSpanQueTieneElLink(linkSeguidos);
 		}
 
 		public IList<string> Seguidores()
 		{
 			IrAlPerfilDelUsuarioLogueado();
 
-			var linkSeguidores = LinkSeguidores();
-			var cantidadSeguidores = TextoDelSpanQueTieneElLink(linkSeguidores);			
+			var linkSeguidores = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
+            var cantidadSeguidores = TextoDelSpanQueTieneElLink(linkSeguidores);			
 
 			linkSeguidores.Click();
 
@@ -66,7 +64,7 @@ namespace Instagram_Automat
 		{
 			IrAlPerfilDelUsuarioLogueado();
 
-			var linkSeguidores = LinkSeguidos();
+			var linkSeguidores = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
 			var cantidadSeguidores = TextoDelSpanQueTieneElLink(linkSeguidores);
 
 			linkSeguidores.Click();
@@ -85,16 +83,6 @@ namespace Instagram_Automat
 		private static int TextoDelSpanQueTieneElLink(IWebElement linkSeguidores)
 		{
 			return Convert.ToInt32(linkSeguidores.FindElement(By.CssSelector("span")).Text.Replace(",", ""));
-		}
-
-		private IWebElement LinkSeguidores()
-		{
-			return _browser.FindElement(By.XPath($"//a[contains(@href, '/{_usuario.NombreDeUsuario}/followers/')]"));
-		}
-
-		private IWebElement LinkSeguidos()
-		{
-			return _browser.FindElement(By.XPath($"//a[contains(@href, '/{_usuario.NombreDeUsuario}/following/')]"));
 		}
 
 		private List<string> NicksDeUsuariosRelacionados(int cantidadQueSeDebeConseguir)
@@ -130,6 +118,7 @@ namespace Instagram_Automat
 			var botonIngresar = _browser.FindElement(By.CssSelector("button[type=\"submit\"]"));
 
             new ExecuterBuilder(botonIngresar.Click)
+                .WaitTimeIfException(1, 5)
                 .IfException(RechazarOfrecimientos)
                 .WaitTimeAfterExecution(1, 2)
                 .Execute();
@@ -172,7 +161,7 @@ namespace Instagram_Automat
 			botonUnfollowDelPopup.Click();
 			Thread.Sleep(Random.Next(3500, 5000));
 
-			if (CantidadRealDeSeguidos() == _usuario.CantidadSeguidos())
+			if (CantidadDeSeguidosQueFiguraEnElPerfil() == _usuario.CantidadSeguidos())
 			{
 				throw new Exception("Se colgó");				
 			}				
