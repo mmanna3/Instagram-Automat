@@ -15,27 +15,29 @@ namespace Instagram_Automat
 
 		public static bool PantallaActivaEsPerfilDelUsuarioLogueado(IWebDriver browser)
 		{
-			return browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Edit Profile')]"));
+			return browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Following')]"));
 		}
 
-		public static void RechazarOfrecimientos(IWebDriver browser)
+        public static void RechazarOfrecimientos(IWebDriver browser)
 		{
-			if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Not Now')]")))
+            if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Close')]")))
+            {
+                browser.FindElement(By.XPath("//button[contains(text(), 'Close')]")).Click();;                
+                Thread.Sleep(4000);
+            }
+            if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Not Now')]")))
 			{
-				var botonRechazar = browser.FindElement(By.XPath("//button[contains(text(), 'Not Now')]"));
-				botonRechazar.Click();
+				browser.FindElement(By.XPath("//button[contains(text(), 'Not Now')]")).Click();				
 				Thread.Sleep(4000);
 			}
 			if (browser.IsElementDisplayed(By.XPath("//[contains(text(), 'Go to the App')]")))
 			{
-				var botonRechazar = browser.FindElement(By.XPath("//button[contains(text(), 'Go to the')]"));
-				botonRechazar.Click();
+				browser.FindElement(By.XPath("//button[contains(text(), 'Go to the')]")).Click();
 				Thread.Sleep(4000);
 			}
 			if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Cancel')]")))
 			{
-				var botonRechazar = browser.FindElement(By.XPath("//button[contains(text(), 'Cancel')]"));
-				botonRechazar.Click();
+				browser.FindElement(By.XPath("//button[contains(text(), 'Cancel')]")).Click();				
 				Thread.Sleep(4000);
 			}			
 		}

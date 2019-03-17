@@ -11,9 +11,9 @@ namespace Instagram_Automat
 		public DataAccesLayer()
 		{
 			_context = new MyDbContext();
-		}
+        }
 
-		public void EliminarTodosLosSeguidores(Usuario usuario)
+        public void EliminarTodosLosSeguidores(Usuario usuario)
 		{
 			var seguidores = _context.Seguidores.Where(x => x.UsuarioSeguidoId == usuario.Id);
 

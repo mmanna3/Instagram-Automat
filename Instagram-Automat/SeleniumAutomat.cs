@@ -20,7 +20,6 @@ namespace Instagram_Automat
 		private readonly Usuario _usuario;
 		private static readonly Random Random = new Random();
 		private readonly DataAccesLayer _dal;
-		private bool _yaEspereUnaVez = false;
 
 		public SeleniumAutomat(Usuario usuario, DataAccesLayer dal)
 		{
@@ -111,7 +110,7 @@ namespace Instagram_Automat
 			while (cantidadQueSeDebeConseguir > relacionadosLinkElements.Count)
 			{
 				Thread.Sleep(Random.Next(3000, 4000));
-				_browser.ExecuteScript($"window.scrollBy(0,{Random.Next(2000, 3000)})");
+				_browser.ExecuteScript($"window.scrollBy(0,{Random.Next(2000, 3000)})");                
 				relacionadosLinkElements = _browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
 
 				if (cantidadIteracionAnterior == relacionadosLinkElements.Count)
@@ -134,7 +133,7 @@ namespace Instagram_Automat
 			passwordInput.SendKeys(_usuario.Contrasenia);
 
 			var botonIngresar = _browser.FindElement(By.CssSelector("button[type=\"submit\"]"));
-			botonIngresar.Click();
+            botonIngresar.ClickAndIfExceptionScroll();
 
 			EsperarEntre(1000, 2000);
 
