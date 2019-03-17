@@ -1,19 +1,27 @@
 using System;
 using System.Threading;
+using OpenQA.Selenium;
 
 namespace Instagram_Automat.Utils
 {
     public class ExecuterBuilder
     {
         private Action _methodToExecute;
-        private object[] _methodToExecuteParams;
-
         private Action _ifExceptionMethod;
-        private object[] _ifExceptionMethodParams;
 
-        private static int _cantidadDeVecesAntesDeAbortar = 1;
-        private static int _esperaMinimaEntreIntentosEnSegundos = 3;
-        private static int _esperaMaximaEntreIntentosEnSegundos = 6;
+        private static int _attemptsNumberBeforeCancel = 1;
+
+        private static int _minWaitTimeBetweenAttemptsInSeconds = 3;
+        private static int _maxWaitTimeBetweenAttemptsInSeconds = 6;
+
+        private static int _minWaitTimeBeforeStart = 0;
+        private static int _maxWaitTimeBeforeStart = 0;
+
+        private int _minWaitTimeAfterExecution = 0;
+        private int _maxWaitTimeAfterExecution = 0;
+
+        private int _minWaitTimeIfException = 0;
+        private int _maxWaitTimeIfException = 0;
 
         private static readonly Random Random = new Random();
 
@@ -22,42 +30,78 @@ namespace Instagram_Automat.Utils
             _methodToExecute = methodToExecute;
 		}
 
-        public ExecuterBuilder IfException(Action methodToExecute, object[] parameters)
+        public ExecuterBuilder(Action methodToExecute)
+        {
+            _methodToExecute = methodToExecute;
+        }
+
+        public ExecuterBuilder IfException(Action methodToExecute)
         {
             _ifExceptionMethod = methodToExecute;
-            _ifExceptionMethodParams = parameters;
             return this;
         }
 
         public void Execute()
         {
+            WaitBetween(_minWaitTimeBeforeStart, _maxWaitTimeBeforeStart);
+
             var seEjecutoCorrectamente = false;
-            while (_cantidadDeVecesAntesDeAbortar > 0 && seEjecutoCorrectamente)
+            while (_attemptsNumberBeforeCancel > 0 && !seEjecutoCorrectamente)
             {
                 try
                 {
-                    _methodToExecute.DynamicInvoke(_methodToExecuteParams);
+                    _methodToExecute.Invoke();
                     seEjecutoCorrectamente = true;
                 }
                 catch (Exception)
                 {
-                    _cantidadDeVecesAntesDeAbortar--;
-                    Thread.Sleep(Random.Next(_esperaMinimaEntreIntentosEnSegundos, _esperaMaximaEntreIntentosEnSegundos));
-                    _ifExceptionMethod.DynamicInvoke(_ifExceptionMethodParams);
+                    _attemptsNumberBeforeCancel--;
+                    WaitBetween(_minWaitTimeIfException, _maxWaitTimeIfException);
+
+                    _ifExceptionMethod.Invoke();
+                    WaitBetween(_minWaitTimeBetweenAttemptsInSeconds, _maxWaitTimeBetweenAttemptsInSeconds);
                 }
-            }            
+            }
+
+            WaitBetween(_minWaitTimeAfterExecution, _maxWaitTimeAfterExecution);
         }
 
-        public ExecuterBuilder TiempoDeEsperaEntreIntentosEnSegundos(int randomFrom, int randomTo)
+        private void WaitBetween(int minWaitTimeInSeconds, int maxWaitTimeInSeconds)
         {
-            _esperaMinimaEntreIntentosEnSegundos = randomFrom;
-            _esperaMaximaEntreIntentosEnSegundos = randomTo;
+            Thread.Sleep(Random.Next(minWaitTimeInSeconds*1000, maxWaitTimeInSeconds*1000));
+        }
+
+        public ExecuterBuilder WaitTimeBetweenAttempts(int minInSeconds, int maxInSeconds)
+        {
+            _minWaitTimeBetweenAttemptsInSeconds = minInSeconds;
+            _maxWaitTimeBetweenAttemptsInSeconds = maxInSeconds;
             return this;
         }
 
-        public ExecuterBuilder CantidadDeVecesAntesDeAbortar(int cantidadDeVecesAntesDeAbortar)
+        public ExecuterBuilder WaitTimeBeforeStart(int minInSeconds, int maxInSeconds)
         {
-            _cantidadDeVecesAntesDeAbortar = cantidadDeVecesAntesDeAbortar;
+            _minWaitTimeBeforeStart = minInSeconds;
+            _maxWaitTimeBeforeStart = maxInSeconds;
+            return this;
+        }
+
+        public ExecuterBuilder WaitTimeAfterExecution(int minInSeconds, int maxInSeconds)
+        {
+            _minWaitTimeAfterExecution = minInSeconds;
+            _maxWaitTimeAfterExecution = maxInSeconds;
+            return this;
+        }
+
+        public ExecuterBuilder WaitTimeIfException(int minInSeconds, int maxInSeconds)
+        {
+            _minWaitTimeIfException = minInSeconds;
+            _maxWaitTimeIfException = maxInSeconds;
+            return this;
+        }
+
+        public ExecuterBuilder AttemptsNumberBeforeCancel(int attemptsNumber)
+        {
+            _attemptsNumberBeforeCancel = attemptsNumber;
             return this;
         }
     }

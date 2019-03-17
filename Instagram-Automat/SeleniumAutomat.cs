@@ -129,11 +129,12 @@ namespace Instagram_Automat
 
 			var botonIngresar = _browser.FindElement(By.CssSelector("button[type=\"submit\"]"));
 
-            new ExecuterBuilder(botonIngresar.Click, null).Execute();
+            new ExecuterBuilder(botonIngresar.Click)
+                .IfException(RechazarOfrecimientos)
+                .WaitTimeAfterExecution(1, 2)
+                .Execute();
 
-			EsperarEntre(1000, 2000);
-
-			while (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser))
+            while (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser))
 			{
 				MetodosGenerales.RechazarOfrecimientos(_browser);
 				IrAlPerfilDelUsuarioLogueado();
@@ -141,6 +142,11 @@ namespace Instagram_Automat
 			EsperarEntre(2000, 3000);
 			IrAlPerfilDelUsuarioLogueado();
 		}
+
+        public void RechazarOfrecimientos()
+        {
+            MetodosGenerales.RechazarOfrecimientos(_browser);
+        }
 
 		public void DejarDeSeguirUsuarios(IList<string> nicksUsuariosADejarDeSeguir)
 		{
