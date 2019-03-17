@@ -12,11 +12,13 @@ namespace Instagram_Automat
     public class SeleniumAutomat
 	{
 		private YKNChromeDriver _browser;
-		private readonly Usuario _usuario;
+        private List<string> _nicksUsuariosSeguidos;
+        private readonly Usuario _usuario;
 		private static readonly Random Random = new Random();
 		private readonly DataAccesLayer _dal;
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		public SeleniumAutomat(Usuario usuario, DataAccesLayer dal)
+        public SeleniumAutomat(Usuario usuario, DataAccesLayer dal)
 		{
 			_usuario = usuario;
 			_browser = MetodosGenerales.Browser();
@@ -29,7 +31,7 @@ namespace Instagram_Automat
 		{
 			IrAlPerfilDelUsuarioLogueado();
 			var linkSeguidores = MetodosGenerales.LinkSeguidos(_browser, _usuario.NombreDeUsuario);
-            return TextoDelSpanQueTieneElLink(linkSeguidores);
+            return MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidores);
 		}
 
 
@@ -37,7 +39,7 @@ namespace Instagram_Automat
 		{
 			IrAlPerfilDelUsuarioLogueado();
 			var linkSeguidos = MetodosGenerales.LinkSeguidos(_browser, _usuario.NombreDeUsuario);
-            return TextoDelSpanQueTieneElLink(linkSeguidos);
+            return MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidos);
 		}
 
 		public IList<string> Seguidores()
@@ -45,13 +47,13 @@ namespace Instagram_Automat
 			IrAlPerfilDelUsuarioLogueado();
 
 			var linkSeguidores = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
-            var cantidadSeguidores = TextoDelSpanQueTieneElLink(linkSeguidores);			
+            var cantidadSeguidores = MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidores);			
 
 			linkSeguidores.Click();
 
 			try
 			{
-				Console.WriteLine("Obteniendo el nick de cada seguidor...");
+				log.Info("Obteniendo el nick de cada seguidor...");
 				return NicksDeUsuariosRelacionados(cantidadSeguidores);
 			}
 			catch
@@ -62,28 +64,23 @@ namespace Instagram_Automat
 
 		public IList<string> Seguidos()
 		{
-			IrAlPerfilDelUsuarioLogueado();
+            new ExecuterBuilder(ObtenerNicksDeSeguidos)
+                .AttemptsNumberBeforeCancel(5)
+                .Execute();
 
-			var linkSeguidores = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
-			var cantidadSeguidores = TextoDelSpanQueTieneElLink(linkSeguidores);
-
-			linkSeguidores.Click();
-
-			try
-			{
-				Console.WriteLine($"Obteniendo el nick de cada seguido...");
-				return NicksDeUsuariosRelacionados(cantidadSeguidores);
-			}
-			catch
-			{
-				return Seguidos();
-			}
+            return _nicksUsuariosSeguidos;
 		}
 
-		private static int TextoDelSpanQueTieneElLink(IWebElement linkSeguidores)
-		{
-			return Convert.ToInt32(linkSeguidores.FindElement(By.CssSelector("span")).Text.Replace(",", ""));
-		}
+        private void ObtenerNicksDeSeguidos()
+        {
+            IrAlPerfilDelUsuarioLogueado();
+
+            var linkSeguidos = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
+            var cantidadSeguidores = MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidos);
+            linkSeguidos.Click();
+
+            _nicksUsuariosSeguidos = NicksDeUsuariosRelacionados(cantidadSeguidores);
+        }
 
 		private List<string> NicksDeUsuariosRelacionados(int cantidadQueSeDebeConseguir)
 		{
@@ -123,7 +120,7 @@ namespace Instagram_Automat
                 .WaitTimeAfterExecution(1, 2)
                 .Execute();
 
-            while (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser))
+            while (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser, _usuario))
 			{
 				MetodosGenerales.RechazarOfrecimientos(_browser);
 				IrAlPerfilDelUsuarioLogueado();
@@ -145,7 +142,7 @@ namespace Instagram_Automat
 
 		private void IrAlPerfilDelUsuarioLogueado()
 		{
-			if (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser))
+			if (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser, _usuario))
 				_browser.Url = $"http://www.instagram.com/{_usuario.NombreDeUsuario}";
 		}
 

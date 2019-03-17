@@ -5,7 +5,7 @@ namespace Instagram_Automat.Utils
 {
     public class YKNChromeDriver : ChromeDriver
     {
-        private static readonly Random Random;
+        private static readonly Random Random = new Random();
 
         public YKNChromeDriver(ChromeOptions options) : base(options)
         {            

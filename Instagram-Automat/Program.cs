@@ -36,7 +36,7 @@ namespace Instagram_Automat
 					}
 					case MenuOpciones.OpcionActualizarCantidadDeSeguidos:
 					{
-						ActualizarCantidadDeSeguidos();
+						ActualizarListaDeSeguidos();
 						MostrarOperacionRealizadaConExito();
 						opcionElegida = MostrarMenu();
 						break;
@@ -71,15 +71,17 @@ namespace Instagram_Automat
 
 		private static void MostrarOperacionRealizadaConExito()
 		{
-			Console.WriteLine("Operación realizada con éxito");
+			log.Info("Operación realizada con éxito");
 			Console.ReadLine();
 		}
 
-		private static void ActualizarCantidadDeSeguidos()
+		private static void ActualizarListaDeSeguidos()
 		{
-			var seguidos = _seleniumAutomat.Seguidos();
+            log.Info($"Obteniendo nicks de cada usuario seguido...");
 
-			Console.WriteLine($"Guardando nick de cada seguido en la base...");
+            var seguidos = _seleniumAutomat.Seguidos();
+
+			log.Info($"Guardando nick de cada seguido en la base...");
 
 			Dal.EliminarTodosLosSeguidos(_usuario);
 
@@ -88,11 +90,11 @@ namespace Instagram_Automat
 
 		private static void MostrarChequeoDeSeguidoresYSeguidosCensados()
 		{
-			Console.WriteLine(_usuario.CantidadSeguidos() == _seleniumAutomat.CantidadDeSeguidosQueFiguraEnElPerfil()
+			log.Info(_usuario.CantidadSeguidos() == _seleniumAutomat.CantidadDeSeguidosQueFiguraEnElPerfil()
 				? "\nNo es necesario actualizar la cantidad de seguidos."
 				: "\nSe recomienda actualizar la cantidad de seguidos.");
 
-			Console.WriteLine(_usuario.CantidadSeguidores() == _seleniumAutomat.CantidadDeSeguidoresQueFiguraEnElPerfil()
+			log.Info(_usuario.CantidadSeguidores() == _seleniumAutomat.CantidadDeSeguidoresQueFiguraEnElPerfil()
 				? "No es necesario actualizar la cantidad de seguidores.\n"
 				: "Se recomienda actualizar la cantidad de seguidores.\n");
 		}
@@ -101,7 +103,7 @@ namespace Instagram_Automat
 		{
 			var seguidores = _seleniumAutomat.Seguidores();			
 
-			Console.WriteLine($"Guardando nick de cada seguidor en la base...");
+			log.Info($"Guardando nick de cada seguidor en la base...");
 
 			Dal.EliminarTodosLosSeguidores(_usuario);
 
@@ -114,7 +116,7 @@ namespace Instagram_Automat
 			MostrarDatosDelUsuarioPrincipal();
 
 			foreach (var opcion in Enum.GetValues(typeof(MenuOpciones)).Cast<MenuOpciones>())
-				Console.WriteLine($@"{(int) opcion} - {opcion.Descripcion()}");
+                Console.WriteLine($@"{(int) opcion} - {opcion.Descripcion()}");
 
 			int opcionElegida;
 			do
@@ -130,21 +132,21 @@ namespace Instagram_Automat
 
 		private static void MostrarDatosDelUsuarioPrincipal()
 		{
-			Console.WriteLine($"Usuario logueado: {_usuario.NombreDeUsuario}.");
-			Console.WriteLine($"Seguidores último censo: {_usuario.CantidadSeguidores()}.");
-			Console.WriteLine($"Seguidos último censo: {_usuario.CantidadSeguidos()}.\n");			
+			log.Info($"Usuario logueado: {_usuario.NombreDeUsuario}.");
+			log.Info($"Seguidores último censo: {_usuario.CantidadSeguidores()}.");
+			log.Info($"Seguidos último censo: {_usuario.CantidadSeguidos()}.\n");			
 		}
 
 		private static void ObtenerUsuarioPrincipal()
 		{
-			Console.WriteLine(@"Ingresar nombre de usuario:");
+            Console.WriteLine(@"Ingresar nombre de usuario:");
 			var nombreUsuario = Console.ReadLine();
 
 			var usuario = Dal.UsuarioOrDefault(nombreUsuario);
 
 			if (usuario == null)
 			{
-				Console.WriteLine(@"Ingresar contraseña:");
+                Console.WriteLine(@"Ingresar contraseña:");
 				var contrasenia = Console.ReadLine();
 
 				usuario = Dal.CrearUsuario(nombreUsuario, contrasenia);

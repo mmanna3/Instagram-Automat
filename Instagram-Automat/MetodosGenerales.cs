@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using Instagram_Automat.ExtensionMethods;
 using Instagram_Automat.Models;
 using Instagram_Automat.Utils;
@@ -14,10 +15,10 @@ namespace Instagram_Automat
 			browser.Url = $"http://www.instagram.com/{nombreDeUsuario}";
 		}
 
-		public static bool PantallaActivaEsPerfilDelUsuarioLogueado(IWebDriver browser)
+		public static bool PantallaActivaEsPerfilDelUsuarioLogueado(IWebDriver browser, Usuario usuario)
 		{
-			return browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Following')]"));
-		}
+			return browser.IsElementDisplayed(By.XPath($"//a[contains(@href, '/{usuario.NombreDeUsuario}/followers/')]"));
+        }
 
         public static void RechazarOfrecimientos(IWebDriver browser)
 		{
@@ -51,6 +52,11 @@ namespace Instagram_Automat
         public static IWebElement LinkSeguidos(YKNChromeDriver browser, string nombreDeUsuario)
         {
             return browser.FindElement(By.XPath($"//a[contains(@href, '/{nombreDeUsuario}/following/')]"));
+        }
+
+        public static int TextoDelSpanQueTieneElLink(IWebElement linkSeguidores)
+        {
+            return Convert.ToInt32(linkSeguidores.FindElement(By.CssSelector("span")).Text.Replace(",", ""));
         }
 
         public static YKNChromeDriver Browser()

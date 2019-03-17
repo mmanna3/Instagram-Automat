@@ -25,6 +25,8 @@ namespace Instagram_Automat.Utils
 
         private static readonly Random Random = new Random();
 
+        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         public ExecuterBuilder(Action methodToExecute, object[] parameters)
 		{
             _methodToExecute = methodToExecute;
@@ -53,12 +55,17 @@ namespace Instagram_Automat.Utils
                     _methodToExecute.Invoke();
                     seEjecutoCorrectamente = true;
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
+                    log.Warn($"Exception: {e.Message}");
+                    log.Warn($"Attempt number: {_attemptsNumberBeforeCancel}");
+
                     _attemptsNumberBeforeCancel--;
                     WaitBetween(_minWaitTimeIfException, _maxWaitTimeIfException);
 
-                    _ifExceptionMethod.Invoke();
+                    if (_ifExceptionMethod != null)
+                        _ifExceptionMethod.Invoke();
+
                     WaitBetween(_minWaitTimeBetweenAttemptsInSeconds, _maxWaitTimeBetweenAttemptsInSeconds);
                 }
             }
