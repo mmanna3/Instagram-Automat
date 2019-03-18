@@ -63,19 +63,21 @@ namespace Instagram_Automat.Utils
                     _attemptsNumberBeforeCancel--;
                     WaitBetween(_minWaitTimeIfException, _maxWaitTimeIfException);
 
-                    if (_ifExceptionMethod != null)
-                        _ifExceptionMethod.Invoke();
+	                _ifExceptionMethod?.Invoke();
 
-                    WaitBetween(_minWaitTimeBetweenAttemptsInSeconds, _maxWaitTimeBetweenAttemptsInSeconds);
-                }
+	                var waitTime = WaitBetween(_minWaitTimeBetweenAttemptsInSeconds, _maxWaitTimeBetweenAttemptsInSeconds);
+	                log.Warn($"Wait time before next attempt: {waitTime}");
+				}
             }
 
             WaitBetween(_minWaitTimeAfterExecution, _maxWaitTimeAfterExecution);
         }
 
-        private void WaitBetween(int minWaitTimeInSeconds, int maxWaitTimeInSeconds)
+        private static int WaitBetween(int minWaitTimeInSeconds, int maxWaitTimeInSeconds)
         {
-            Thread.Sleep(Random.Next(minWaitTimeInSeconds*1000, maxWaitTimeInSeconds*1000));
+	        var waitTime = Random.Next(minWaitTimeInSeconds * 1000, maxWaitTimeInSeconds * 1000);
+			Thread.Sleep(waitTime);
+	        return waitTime;
         }
 
         public ExecuterBuilder WaitTimeBetweenAttempts(int minInSeconds, int maxInSeconds)

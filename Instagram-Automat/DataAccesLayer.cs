@@ -22,7 +22,7 @@ namespace Instagram_Automat
 			_context.SaveChanges();
 		}
 
-		public void CargarSeguidores(Usuario usuario, IList<string> seguidores)
+		public void GuardarSeguidores(Usuario usuario, IList<string> seguidores)
 		{
 			foreach (var seguidor in seguidores)
 			{
@@ -33,7 +33,7 @@ namespace Instagram_Automat
 			_context.SaveChanges();
 		}
 
-		public void CargarSeguidos(Usuario usuario, IList<string> seguidos)
+		public void GuardarSeguidos(Usuario usuario, IList<string> seguidos)
 		{
 			foreach (var seguido in seguidos)
 			{

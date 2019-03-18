@@ -51,9 +51,9 @@ namespace Instagram_Automat
 					case MenuOpciones.DejarDeSeguirUsuariosQueNoMeSiguen:
 					{
                         new ExecuterBuilder(DejarDeSeguirUsuariosQueNoMeSiguen)
-                                .AttemptsNumberBeforeCancel(10)
-                                .WaitTimeBetweenAttempts(100, 150)
-                                .Execute();                            
+                                .AttemptsNumberBeforeCancel(20)
+                                .WaitTimeBetweenAttempts(600, 900)
+								.Execute();
 
                         MostrarOperacionRealizadaConExito();
 						opcionElegida = MostrarMenu();
@@ -71,43 +71,52 @@ namespace Instagram_Automat
 
 		private static void MostrarOperacionRealizadaConExito()
 		{
-			log.Info("Operación realizada con éxito");
+			log.Info("Operación finalizada. Presione enter para continuar.");
 			Console.ReadLine();
 		}
 
 		private static void ActualizarListaDeSeguidos()
 		{
-            log.Info($"Obteniendo nicks de cada usuario seguido...");
-
+            log.Info("Obteniendo nicks de cada usuario seguido...");
             var seguidos = _seleniumAutomat.Seguidos();
 
-			log.Info($"Guardando nick de cada seguido en la base...");
-
+			log.Info("Eliminando nicks de seguidos de la base...");
 			Dal.EliminarTodosLosSeguidos(_usuario);
 
-			Dal.CargarSeguidos(_usuario, seguidos);
+			log.Info("Guardando nicks actualizados de seguidos en la base...");
+			Dal.GuardarSeguidos(_usuario, seguidos);
 		}
 
 		private static void MostrarChequeoDeSeguidoresYSeguidosCensados()
 		{
-			log.Info(_usuario.CantidadSeguidos() == _seleniumAutomat.CantidadDeSeguidosQueFiguraEnElPerfil()
+			var seguidosDb = _usuario.CantidadSeguidos();
+			var seguidosPerfil = _seleniumAutomat.CantidadDeSeguidosQueFiguraEnElPerfil();
+
+			var seguidoresDb = _usuario.CantidadSeguidores();
+			var seguidoresPerfil = _seleniumAutomat.CantidadDeSeguidoresQueFiguraEnElPerfil();
+
+			log.Info($"Seguidos en la base: {seguidosDb}. Seguidos reales: {seguidosPerfil}");
+			log.Info($"Seguidores en la base: {seguidoresDb}. Seguidores reales: {seguidoresPerfil}");
+
+			log.Info(seguidosDb == seguidosPerfil
 				? "\nNo es necesario actualizar la cantidad de seguidos."
 				: "\nSe recomienda actualizar la cantidad de seguidos.");
 
-			log.Info(_usuario.CantidadSeguidores() == _seleniumAutomat.CantidadDeSeguidoresQueFiguraEnElPerfil()
+			log.Info(seguidoresDb == seguidoresPerfil
 				? "No es necesario actualizar la cantidad de seguidores.\n"
 				: "Se recomienda actualizar la cantidad de seguidores.\n");
 		}
 
 		private static void ActualizarCantidadDeSeguidores()
 		{
-			var seguidores = _seleniumAutomat.Seguidores();			
+			log.Info("Obteniendo nicks de cada usuario seguidor...");
+			var seguidores = _seleniumAutomat.Seguidores();
 
-			log.Info($"Guardando nick de cada seguidor en la base...");
-
+			log.Info("Eliminando nicks de seguidos de la base...");
 			Dal.EliminarTodosLosSeguidores(_usuario);
 
-			Dal.CargarSeguidores(_usuario, seguidores);
+			log.Info("Guardando nicks actualizados de seguidos en la base...");
+			Dal.GuardarSeguidores(_usuario, seguidores);
 		}
 
 		private static MenuOpciones MostrarMenu()

@@ -11,14 +11,16 @@ namespace Instagram_Automat
 {
     public class SeleniumAutomat
 	{
-		private YKNChromeDriver _browser;
-        private List<string> _nicksUsuariosSeguidos;
+		private YKNChromeDriver _browser;        
         private readonly Usuario _usuario;
 		private static readonly Random Random = new Random();
 		private readonly DataAccesLayer _dal;
-        private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly log4net.ILog Log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public SeleniumAutomat(Usuario usuario, DataAccesLayer dal)
+		private IList<string> _nicksUsuariosSeguidores;
+		private IList<string> _nicksUsuariosSeguidos;
+
+		public SeleniumAutomat(Usuario usuario, DataAccesLayer dal)
 		{
 			_usuario = usuario;
 			_browser = MetodosGenerales.Browser();
@@ -30,7 +32,7 @@ namespace Instagram_Automat
 		public int CantidadDeSeguidoresQueFiguraEnElPerfil()
 		{
 			IrAlPerfilDelUsuarioLogueado();
-			var linkSeguidores = MetodosGenerales.LinkSeguidos(_browser, _usuario.NombreDeUsuario);
+			var linkSeguidores = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
             return MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidores);
 		}
 
@@ -44,22 +46,22 @@ namespace Instagram_Automat
 
 		public IList<string> Seguidores()
 		{
+			new ExecuterBuilder(ObtenerNicksDeSeguidores)
+				.AttemptsNumberBeforeCancel(5)
+				.Execute();
+
+			return _nicksUsuariosSeguidores;
+		}
+
+		private void ObtenerNicksDeSeguidores()
+		{
 			IrAlPerfilDelUsuarioLogueado();
 
 			var linkSeguidores = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
-            var cantidadSeguidores = MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidores);			
-
+			var cantidadSeguidores = MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidores);
 			linkSeguidores.Click();
 
-			try
-			{
-				log.Info("Obteniendo el nick de cada seguidor...");
-				return NicksDeUsuariosRelacionados(cantidadSeguidores);
-			}
-			catch
-			{
-				return Seguidores();
-			}
+			_nicksUsuariosSeguidores = NicksDeUsuariosRelacionados(cantidadSeguidores);
 		}
 
 		public IList<string> Seguidos()
@@ -75,7 +77,7 @@ namespace Instagram_Automat
         {
             IrAlPerfilDelUsuarioLogueado();
 
-            var linkSeguidos = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
+            var linkSeguidos = MetodosGenerales.LinkSeguidos(_browser, _usuario.NombreDeUsuario);
             var cantidadSeguidores = MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidos);
             linkSeguidos.Click();
 
@@ -87,18 +89,20 @@ namespace Instagram_Automat
 			var relacionadosLinkElements = _browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
 
 			var cantidadIteracionAnterior = 0;
-			while (cantidadQueSeDebeConseguir > relacionadosLinkElements.Count)
+			while (cantidadQueSeDebeConseguir > relacionadosLinkElements.Count + 2) //Siempre hay uno o dos que no los consigue
 			{
-				Thread.Sleep(Random.Next(3000, 4000));
-                _browser.Scroll(2000, 3000);
+				EsperarEntre(2000, 3000);
+                _browser.Scroll(5000, 10000);
+
 				relacionadosLinkElements = _browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
 
 				if (cantidadIteracionAnterior == relacionadosLinkElements.Count)
-					throw new Exception("Se tildó.");
+					throw new Exception($"Debían conseguirse {cantidadQueSeDebeConseguir} y se consiguieron {cantidadIteracionAnterior}.");
 
 				cantidadIteracionAnterior = relacionadosLinkElements.Count;
 			}
 
+			Log.Info($"Debían conseguirse {cantidadQueSeDebeConseguir} y se consiguieron {cantidadIteracionAnterior}.");
 			return relacionadosLinkElements.Select(x => x.Text).ToList();
 		}
 
@@ -152,18 +156,18 @@ namespace Instagram_Automat
 
 			var botonFollowing = _browser.FindElement(By.XPath("//button[contains(text(), 'Following')]"), 10);
 			botonFollowing.Click();
-			Thread.Sleep(Random.Next(3500, 5000));
+			EsperarEntre(1000, 2000);
 
 			var botonUnfollowDelPopup = _browser.FindElement(By.XPath("//button[contains(text(), 'Unfollow')]"), 10);
 			botonUnfollowDelPopup.Click();
-			Thread.Sleep(Random.Next(3500, 5000));
+			EsperarEntre(1000, 2000);
 
-			if (CantidadDeSeguidosQueFiguraEnElPerfil() == _usuario.CantidadSeguidos())
-			{
-				throw new Exception("Se colgó");				
-			}				
-			
+			var cantidadDeSeguidosPerfil = CantidadDeSeguidosQueFiguraEnElPerfil();
+			if (cantidadDeSeguidosPerfil == _usuario.CantidadSeguidos())
+				throw new Exception($"No se pudo dejar de seguir al usuario '{nick}'.");
+
 			_dal.EliminarSeguido(_usuario, nick);
+			Log.Info($"Cantidad de seguidos: {cantidadDeSeguidosPerfil}. Se dejó de seguir al usuario '{nick}'.");
 		}
 
 		private static void EsperarEntre(int inicio, int fin)
