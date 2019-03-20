@@ -124,19 +124,19 @@ namespace Instagram_Automat
                 .WaitTimeAfterExecution(1, 2)
                 .Execute();
 
-            while (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser, _usuario))
-			{
-				MetodosGenerales.RechazarOfrecimientos(_browser);
-				IrAlPerfilDelUsuarioLogueado();
-			}
-			EsperarEntre(2000, 3000);
+			if (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser, _usuario))
+				new ExecuterBuilder(RechazarOfrecimientos)
+					.WaitTimeAfterExecution(2, 3)
+					.Execute();
+
 			IrAlPerfilDelUsuarioLogueado();
 		}
 
-        public void RechazarOfrecimientos()
+        private void RechazarOfrecimientos()
         {
             MetodosGenerales.RechazarOfrecimientos(_browser);
-        }
+	        _browser.Scroll(5000, 10000);
+		}
 
 		public void DejarDeSeguirUsuarios(IList<string> nicksUsuariosADejarDeSeguir)
 		{
