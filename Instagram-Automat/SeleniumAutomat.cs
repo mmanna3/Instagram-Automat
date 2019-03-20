@@ -31,7 +31,7 @@ namespace Instagram_Automat
 
 		public int CantidadDeSeguidoresQueFiguraEnElPerfil()
 		{
-			IrAlPerfilDelUsuarioLogueado();
+			MetodosGenerales.IrAlPerfilDelUsuarioLogueado(_browser, _usuario);
 			var linkSeguidores = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
             return MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidores);
 		}
@@ -39,7 +39,7 @@ namespace Instagram_Automat
 
 		public int CantidadDeSeguidosQueFiguraEnElPerfil()
 		{
-			IrAlPerfilDelUsuarioLogueado();
+			MetodosGenerales.IrAlPerfilDelUsuarioLogueado(_browser, _usuario);
 			var linkSeguidos = MetodosGenerales.LinkSeguidos(_browser, _usuario.NombreDeUsuario);
             return MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidos);
 		}
@@ -55,7 +55,7 @@ namespace Instagram_Automat
 
 		private void ObtenerNicksDeSeguidores()
 		{
-			IrAlPerfilDelUsuarioLogueado();
+			MetodosGenerales.IrAlPerfilDelUsuarioLogueado(_browser, _usuario);
 
 			var linkSeguidores = MetodosGenerales.LinkSeguidores(_browser, _usuario.NombreDeUsuario);
 			var cantidadSeguidores = MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidores);
@@ -75,7 +75,7 @@ namespace Instagram_Automat
 
         private void ObtenerNicksDeSeguidos()
         {
-            IrAlPerfilDelUsuarioLogueado();
+            MetodosGenerales.IrAlPerfilDelUsuarioLogueado(_browser, _usuario);
 
             var linkSeguidos = MetodosGenerales.LinkSeguidos(_browser, _usuario.NombreDeUsuario);
             var cantidadSeguidores = MetodosGenerales.TextoDelSpanQueTieneElLink(linkSeguidos);
@@ -89,7 +89,7 @@ namespace Instagram_Automat
 			var relacionadosLinkElements = _browser.FindElements(By.CssSelector("ul>div>li>div>div>div>div>a"));
 
 			var cantidadIteracionAnterior = 0;
-			while (cantidadQueSeDebeConseguir > relacionadosLinkElements.Count + 2) //Siempre hay uno o dos que no los consigue
+			while (cantidadQueSeDebeConseguir > relacionadosLinkElements.Count + 2) //Siempre hay uno o dos que no los consigue, no sé por qué
 			{
 				EsperarEntre(2000, 3000);
                 _browser.Scroll(5000, 10000);
@@ -110,44 +110,39 @@ namespace Instagram_Automat
 		{
 			_browser.Url = "https://www.instagram.com/accounts/login/";
 
-			var userNameInput = _browser.FindElement(By.CssSelector("input[aria-label='Phone number, username, or email']"));
-			userNameInput.SendKeys(_usuario.NombreDeUsuario);
-
-			var passwordInput = _browser.FindElement(By.CssSelector("input[aria-label=\"Password\"]"));
-			passwordInput.SendKeys(_usuario.Contrasenia);
-
-			var botonIngresar = _browser.FindElement(By.CssSelector("button[type=\"submit\"]"));
-
-            new ExecuterBuilder(botonIngresar.Click)
-                .WaitTimeIfException(1, 5)
-                .IfException(RechazarOfrecimientos)
-                .WaitTimeAfterExecution(1, 2)
-                .Execute();
+			new ExecuterBuilder(IngresarUsuarioYContraseniaYLoguear)
+				.IfException(ReiniciarBrowser)
+				.WaitTimeAfterExecution(2, 3)
+				.Execute();
 
 			if (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser, _usuario))
 				new ExecuterBuilder(RechazarOfrecimientos)
 					.WaitTimeAfterExecution(2, 3)
 					.Execute();
 
-			IrAlPerfilDelUsuarioLogueado();
+			MetodosGenerales.IrAlPerfilDelUsuarioLogueado(_browser, _usuario);
 		}
 
-        private void RechazarOfrecimientos()
+		private void IngresarUsuarioYContraseniaYLoguear()
+		{
+			var userNameInput = _browser.FindElement(By.CssSelector("input[aria-label='Phone number, username, or email']"));
+			userNameInput.SendKeys(_usuario.NombreDeUsuario);
+
+			var passwordInput = _browser.FindElement(By.CssSelector("input[aria-label=\"Password\"]"));
+			passwordInput.SendKeys(_usuario.Contrasenia);
+
+			_browser.ClickIfDisplayedAndWait(By.CssSelector("button[type=\"submit\"]"), 2, 3);
+		}
+
+		private void RechazarOfrecimientos()
         {
             MetodosGenerales.RechazarOfrecimientos(_browser);
-	        _browser.Scroll(5000, 10000);
 		}
 
 		public void DejarDeSeguirUsuarios(IList<string> nicksUsuariosADejarDeSeguir)
 		{
 			foreach (var nick in nicksUsuariosADejarDeSeguir)
 				DejarDeSeguirUsuario(nick);
-		}
-
-		private void IrAlPerfilDelUsuarioLogueado()
-		{
-			if (!MetodosGenerales.PantallaActivaEsPerfilDelUsuarioLogueado(_browser, _usuario))
-				_browser.Url = $"http://www.instagram.com/{_usuario.NombreDeUsuario}";
 		}
 
 		private void DejarDeSeguirUsuario(string nick)
@@ -175,11 +170,10 @@ namespace Instagram_Automat
 			Thread.Sleep(Random.Next(inicio, fin));
 		}
 
-		public void ReiniciarBrowserEIiniciarSesion()
+		private void ReiniciarBrowser()
 		{
 			_browser.Dispose();
 			_browser = MetodosGenerales.Browser();
-			IniciarSesion();
 		}
 	}
 }

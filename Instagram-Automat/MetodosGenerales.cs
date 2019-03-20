@@ -10,6 +10,12 @@ namespace Instagram_Automat
 {
 	public static class MetodosGenerales
 	{
+		public static void IrAlPerfilDelUsuarioLogueado(IWebDriver browser, Usuario usuario)
+		{
+			if (!PantallaActivaEsPerfilDelUsuarioLogueado(browser, usuario))
+				browser.Url = $"http://www.instagram.com/{usuario.NombreDeUsuario}";
+		}
+
 		public static void IrAlPerfilDelUsuario(IWebDriver browser, string nombreDeUsuario)
 		{
 			browser.Url = $"http://www.instagram.com/{nombreDeUsuario}";
@@ -20,28 +26,12 @@ namespace Instagram_Automat
 			return browser.IsElementDisplayed(By.XPath($"//a[contains(@href, '/{usuario.NombreDeUsuario}/followers/')]"));
         }
 
-        public static void RechazarOfrecimientos(IWebDriver browser)
-		{
-            if (browser.IsElementDisplayed(By.XPath("//[contains(text(), 'Close')]")))
-            {
-                browser.FindElement(By.XPath("//[contains(text(), 'Close')]")).Click();;                
-                Thread.Sleep(4000);
-            }
-            if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Not Now')]")))
-			{
-				browser.FindElement(By.XPath("//button[contains(text(), 'Not Now')]")).Click();				
-				Thread.Sleep(4000);
-			}
-			if (browser.IsElementDisplayed(By.XPath("//[contains(text(), 'Go to the App')]")))
-			{
-				browser.FindElement(By.XPath("//[contains(text(), 'Go to the')]")).Click();
-				Thread.Sleep(4000);
-			}
-			if (browser.IsElementDisplayed(By.XPath("//button[contains(text(), 'Cancel')]")))
-			{
-				browser.FindElement(By.XPath("//button[contains(text(), 'Cancel')]")).Click();				
-				Thread.Sleep(4000);
-			}			
+        public static void RechazarOfrecimientos(YKNChromeDriver browser)
+        {
+	        browser.ClickIfDisplayedAndWait(By.XPath("//[contains(text(), 'Close')]"), 3, 5);
+	        browser.ClickIfDisplayedAndWait(By.XPath("//button[contains(text(), 'Not Now')]"), 3, 5);
+			browser.ClickIfDisplayedAndWait(By.XPath("//[contains(text(), 'Go to the App')]"), 3, 5);
+			browser.ClickIfDisplayedAndWait(By.XPath("//button[contains(text(), 'Cancel')]"), 3, 5);
 		}
 
         public static IWebElement LinkSeguidores(YKNChromeDriver browser, string nombreDeUsuario)
